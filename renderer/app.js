@@ -375,6 +375,190 @@ async function updateMonthlyTotal() {
     `${d.getFullYear()}年${d.getMonth()+1}月`;
 }
 
+// ============ 分类管理 ============
+let editingCatId = null; // 当前正在编辑的分类 ID（null = 新增模式）
+
+// 打开分类管理弹窗
+function openCatManager() {
+  document.getElementById('catOverlay').style.display = 'flex';
+  resetCatForm();
+  renderCatList();
+}
+
+// 关闭分类管理弹窗
+function closeCatManager() {
+  document.getElementById('catOverlay').style.display = 'none';
+}
+
+// 重置新增表单
+function resetCatForm() {
+  editingCatId = null;
+  document.getElementById('catAddType').value = 'minor';
+  document.getElementById('catAddName').value = '';
+  document.getElementById('catAddIcon').value = '';
+  document.getElementById('btnCatAdd').textContent = '添加';
+  handleCatTypeChange(); // 刷新大类选择器和显示状态
+}
+
+// 大类/小类切换时，显示或隐藏父级大类选择器
+function handleCatTypeChange() {
+  const type = document.getElementById('catAddType').value;
+  const parentSelect = document.getElementById('catAddParent');
+  if (type === 'minor') {
+    parentSelect.style.display = '';
+    // 填充大类选项
+    let html = '';
+    majorCategories.forEach(m => {
+      html += `<option value="${m.id}">${m.icon} ${m.name}</option>`;
+    });
+    parentSelect.innerHTML = html;
+  } else {
+    parentSelect.style.display = 'none';
+  }
+}
+
+// 渲染分类列表
+function renderCatList() {
+  const listEl = document.getElementById('catList');
+  let html = '';
+
+  majorCategories.forEach(major => {
+    const minors = minorMap[major.name] || [];
+    html += renderCatRow(major, true);
+
+    minors.forEach(minor => {
+      html += renderCatRow(minor, false);
+    });
+  });
+
+  listEl.innerHTML = html;
+
+  // 绑定编辑/删除按钮事件
+  listEl.querySelectorAll('.cat-btn-edit').forEach(btn => {
+    btn.addEventListener('click', () => startEditCat(parseInt(btn.dataset.id)));
+  });
+  listEl.querySelectorAll('.cat-btn-delete').forEach(btn => {
+    btn.addEventListener('click', () => deleteCat(parseInt(btn.dataset.id)));
+  });
+}
+
+// 渲染单条分类行
+function renderCatRow(cat, isMajor) {
+  const isPreset = cat.is_preset === 1;
+  const rowClass = isMajor ? 'cat-list-item major-item' : 'cat-list-item minor-item';
+  const indent = isMajor ? '' : '└ ';
+
+  let actionsHtml = '';
+  if (isPreset) {
+    actionsHtml = `<span class="cat-item-badge">🔒 预设</span>`;
+  } else {
+    actionsHtml = `
+      <div class="cat-item-actions">
+        <button class="cat-btn-edit" data-id="${cat.id}" title="编辑">✏️</button>
+        <button class="cat-btn-delete" data-id="${cat.id}" title="删除">🗑️</button>
+      </div>`;
+  }
+
+  return `
+    <div class="${rowClass}">
+      <span class="cat-item-icon">${cat.icon || '📁'}</span>
+      <span class="cat-item-name">${indent}${cat.name}</span>
+      ${actionsHtml}
+    </div>`;
+}
+
+// 开始编辑分类（填充表单）
+function startEditCat(id) {
+  const cat = allCategories.find(c => c.id === id);
+  if (!cat || cat.is_preset) return;
+
+  editingCatId = id;
+  document.getElementById('catAddType').value = cat.type;
+  document.getElementById('catAddName').value = cat.name;
+  document.getElementById('catAddIcon').value = cat.icon || '';
+  document.getElementById('btnCatAdd').textContent = '保存修改';
+  handleCatTypeChange();
+
+  // 如果是小类，选中对应的大类
+  if (cat.type === 'minor' && cat.parent_id) {
+    document.getElementById('catAddParent').value = cat.parent_id;
+  }
+
+  // 滚动到表单顶部
+  document.getElementById('catBody').scrollTop = 0;
+  document.getElementById('catAddName').focus();
+}
+
+// 添加或更新分类
+async function handleAddOrUpdateCat() {
+  const name = document.getElementById('catAddName').value.trim();
+  const icon = document.getElementById('catAddIcon').value.trim();
+  const type = document.getElementById('catAddType').value;
+
+  if (!name) {
+    alert('请输入分类名称');
+    return;
+  }
+
+  if (editingCatId) {
+    // 编辑模式
+    const result = await window.electronAPI.updateCategory({
+      id: editingCatId,
+      name,
+      icon,
+    });
+    if (!result.success) {
+      alert(result.error);
+      return;
+    }
+  } else {
+    // 新增模式
+    const parentId = type === 'minor' ? parseInt(document.getElementById('catAddParent').value) : null;
+    const result = await window.electronAPI.addCategory({
+      name,
+      type,
+      parent_id: parentId,
+      icon,
+    });
+    if (!result.success) {
+      alert(result.error);
+      return;
+    }
+  }
+
+  // 刷新分类数据
+  const cats = await window.electronAPI.getCategories();
+  processCategories(cats);
+  renderFilterTabs();
+  renderCatList();
+  resetCatForm();
+}
+
+// 删除分类
+async function deleteCat(id) {
+  const cat = allCategories.find(c => c.id === id);
+  if (!cat || cat.is_preset) return;
+
+  if (!confirm(`确定要删除分类「${cat.name}」吗？\n\n（只能删除没有支出记录的分类）`)) return;
+
+  const result = await window.electronAPI.deleteCategory(id);
+  if (!result.success) {
+    alert(result.error);
+    return;
+  }
+
+  // 刷新分类数据
+  const cats = await window.electronAPI.getCategories();
+  processCategories(cats);
+  renderFilterTabs();
+  renderCatList();
+
+  // 如果正在编辑的分类被删除了，重置表单
+  if (editingCatId === id) {
+    resetCatForm();
+  }
+}
+
 // ============ 月度统计 ============
 async function openStats() {
   const statsOverlay = document.getElementById('statsOverlay');
@@ -523,6 +707,15 @@ function bindEvents() {
       saveExpense();
     }
   });
+
+  // 分类管理
+  document.getElementById('btnCategory').addEventListener('click', openCatManager);
+  document.getElementById('catClose').addEventListener('click', closeCatManager);
+  document.getElementById('catOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'catOverlay') closeCatManager();
+  });
+  document.getElementById('catAddType').addEventListener('change', handleCatTypeChange);
+  document.getElementById('btnCatAdd').addEventListener('click', handleAddOrUpdateCat);
 
   // 月度统计
   document.getElementById('btnStats').addEventListener('click', openStats);

@@ -51,6 +51,16 @@ async function initDatabase(SQL) {
     );
   `);
 
+  // 数据库迁移：为旧数据库添加 is_preset 字段（如果不存在）
+  try {
+    db.run('ALTER TABLE categories ADD COLUMN is_preset INTEGER DEFAULT 0');
+    // 如果成功添加（说明是旧数据库），将已有分类标记为预设
+    db.run('UPDATE categories SET is_preset = 1');
+    console.log('数据库迁移：is_preset 字段已添加，已有分类已标记为预设');
+  } catch (e) {
+    // 字段已存在，无需迁移
+  }
+
   // 创建支出记录表（如果不存在）
   db.run(`
     CREATE TABLE IF NOT EXISTS expenses (
@@ -134,9 +144,9 @@ function initCategories() {
     ['其他支出', 'minor', 9, '', 3],
   ];
 
-  // 批量插入，parent_id 中的数字对应上面大类的序号
+  // 批量插入，parent_id 中的数字对应上面大类的序号，is_preset=1 表示预设分类
   const stmt = db.prepare(
-    'INSERT INTO categories (name, type, parent_id, icon, sort_order) VALUES (?, ?, ?, ?, ?)'
+    'INSERT INTO categories (name, type, parent_id, icon, sort_order, is_preset) VALUES (?, ?, ?, ?, ?, 1)'
   );
   for (const row of presetData) {
     stmt.run(row);
@@ -167,6 +177,80 @@ function queryRun(sql, params = []) {
 // 获取所有分类
 ipcMain.handle('getCategories', () => {
   return queryAll('SELECT * FROM categories ORDER BY sort_order');
+});
+
+// 添加分类（用户自建）
+ipcMain.handle('addCategory', (_event, cat) => {
+  // 获取同一类型下的最大排序号
+  const parentCondition = cat.parent_id ? `= ${cat.parent_id}` : 'IS NULL';
+  const result = queryAll(
+    `SELECT MAX(sort_order) as max_sort FROM categories WHERE type = ? AND parent_id ${parentCondition}`,
+    [cat.type]
+  );
+  const sortOrder = (result[0]?.max_sort || 0) + 1;
+
+  queryRun(
+    'INSERT INTO categories (name, type, parent_id, icon, sort_order, is_preset) VALUES (?, ?, ?, ?, ?, 0)',
+    [cat.name, cat.type, cat.parent_id || null, cat.icon || '', sortOrder]
+  );
+
+  // 获取刚插入的分类 ID
+  const idResult = queryAll('SELECT last_insert_rowid() as id');
+  return { success: true, id: idResult[0]?.id };
+});
+
+// 修改分类（仅限用户自建分类）
+ipcMain.handle('updateCategory', (_event, cat) => {
+  // 查找原分类
+  const old = queryAll('SELECT * FROM categories WHERE id = ?', [cat.id])[0];
+  if (!old) return { success: false, error: '分类不存在' };
+  if (old.is_preset) return { success: false, error: '不能修改预设分类' };
+
+  // 更新分类本身
+  queryRun(
+    'UPDATE categories SET name = ?, icon = ? WHERE id = ?',
+    [cat.name, cat.icon || '', cat.id]
+  );
+
+  // 如果名称变了，同步更新 expenses 表中的引用
+  if (old.name !== cat.name) {
+    if (old.type === 'major') {
+      queryRun('UPDATE expenses SET category_major = ? WHERE category_major = ?', [cat.name, old.name]);
+    } else {
+      queryRun('UPDATE expenses SET category_minor = ? WHERE category_minor = ?', [cat.name, old.name]);
+    }
+  }
+
+  return { success: true };
+});
+
+// 删除分类（仅限用户自建分类，且有支出记录时禁止删除）
+ipcMain.handle('deleteCategory', (_event, id) => {
+  const cat = queryAll('SELECT * FROM categories WHERE id = ?', [id])[0];
+  if (!cat) return { success: false, error: '分类不存在' };
+  if (cat.is_preset) return { success: false, error: '不能删除预设分类' };
+
+  if (cat.type === 'major') {
+    // 检查是否还有小类
+    const minors = queryAll('SELECT COUNT(*) as cnt FROM categories WHERE parent_id = ?', [id]);
+    if (minors[0]?.cnt > 0) {
+      return { success: false, error: '该大类下还有小类，请先删除所有小类' };
+    }
+    // 检查是否有支出记录
+    const expCount = queryAll('SELECT COUNT(*) as cnt FROM expenses WHERE category_major = ?', [cat.name]);
+    if (expCount[0]?.cnt > 0) {
+      return { success: false, error: `有 ${expCount[0].cnt} 条支出记录使用了该分类，请先清理记录` };
+    }
+  } else {
+    // 小类：检查是否有支出记录
+    const expCount = queryAll('SELECT COUNT(*) as cnt FROM expenses WHERE category_minor = ?', [cat.name]);
+    if (expCount[0]?.cnt > 0) {
+      return { success: false, error: `有 ${expCount[0].cnt} 条支出记录使用了该分类，请先清理记录` };
+    }
+  }
+
+  queryRun('DELETE FROM categories WHERE id = ?', [id]);
+  return { success: true };
 });
 
 // 添加支出记录

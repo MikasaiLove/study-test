@@ -7,6 +7,9 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electronAPI', {
   // ====== 分类相关 ======
   getCategories: () => ipcRenderer.invoke('getCategories'),
+  addCategory: (cat) => ipcRenderer.invoke('addCategory', cat),
+  updateCategory: (cat) => ipcRenderer.invoke('updateCategory', cat),
+  deleteCategory: (id) => ipcRenderer.invoke('deleteCategory', id),
 
   // ====== 支出记录相关 ======
   addExpense: (expense) => ipcRenderer.invoke('addExpense', expense),

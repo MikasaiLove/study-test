@@ -22,6 +22,7 @@
   <div class="action-bar">
     <button class="btn-add" id="btnAdd">➕ 记一笔</button>
     <button class="btn-stats" id="btnStats">📊 月度统计</button>
+    <button class="btn-category" id="btnCategory">⚙️ 分类</button>
   </div>
 
   <!-- ====== 分类筛选标签 ====== -->
@@ -106,6 +107,37 @@
         </div>
         <div class="stats-list" id="statsList">
           <!-- 动态生成各分类统计 -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 分类管理弹窗（默认隐藏） ====== -->
+  <div class="modal-overlay" id="catOverlay" style="display:none;">
+    <div class="modal cat-modal" id="catModal">
+      <div class="modal-header">
+        <span>⚙️ 管理分类</span>
+        <button class="modal-close" id="catClose">✕</button>
+      </div>
+      <div class="modal-body" id="catBody">
+        <!-- 新增分类表单 -->
+        <div class="cat-add-section">
+          <div class="cat-add-row">
+            <select id="catAddType">
+              <option value="minor">新增小类</option>
+              <option value="major">新增大类</option>
+            </select>
+            <select id="catAddParent" style="display:none;">
+              <!-- 动态填充大类选项 -->
+            </select>
+            <input type="text" id="catAddName" placeholder="分类名称" maxlength="10">
+            <input type="text" id="catAddIcon" placeholder="😀" maxlength="2" class="icon-input">
+            <button class="btn-cat-add" id="btnCatAdd">添加</button>
+          </div>
+        </div>
+        <!-- 分类列表 -->
+        <div class="cat-list" id="catList">
+          <!-- 动态生成 -->
         </div>
       </div>
     </div>

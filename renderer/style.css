@@ -81,12 +81,12 @@ body {
   flex-shrink: 0;
 }
 
-.btn-add, .btn-stats {
+.btn-add, .btn-stats, .btn-category {
   flex: 1;
   padding: 10px 0;
   border: none;
   border-radius: 8px;
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer;
   font-weight: 600;
   transition: all 0.2s;
@@ -103,6 +103,13 @@ body {
   color: var(--primary);
 }
 .btn-stats:hover { background: #e0eaff; }
+
+.btn-category {
+  background: #f0f4ff;
+  color: var(--primary);
+  flex: 0.6;
+}
+.btn-category:hover { background: #e0eaff; }
 
 /* ====== 分类筛选标签 ====== */
 .filter-bar {
@@ -368,7 +375,7 @@ body {
 }
 
 /* 按钮 */
-.btn-cancel, .btn-save {
+.btn-cancel, .btn-save, .btn-cat-add {
   flex: 1;
   padding: 12px 0;
   border: none;
@@ -390,6 +397,16 @@ body {
   color: #fff;
 }
 .btn-save:hover { background: var(--primary-dark); }
+
+.btn-cat-add {
+  background: var(--success);
+  color: #fff;
+  padding: 8px 14px;
+  flex: 0;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.btn-cat-add:hover { background: #219a52; }
 
 /* 删除按钮（在列表项上） */
 .btn-delete-item {
@@ -460,6 +477,154 @@ body {
 .stats-total {
   font-size: 15px;
   font-weight: 600;
+}
+
+/* ====== 分类管理弹窗 ====== */
+.cat-modal {
+  max-width: 500px;
+}
+
+.cat-add-section {
+  background: #f9fafb;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.cat-add-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.cat-add-row select,
+.cat-add-row input {
+  padding: 8px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  background: #fff;
+}
+
+.cat-add-row select:focus,
+.cat-add-row input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.cat-add-row .icon-input {
+  width: 48px;
+  text-align: center;
+  font-size: 18px;
+}
+
+#catAddName {
+  flex: 1;
+  min-width: 100px;
+}
+
+.cat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cat-list-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 8px;
+  transition: background 0.15s;
+  gap: 10px;
+}
+
+.cat-list-item:hover {
+  background: #f5f6f8;
+}
+
+.cat-list-item.major-item {
+  font-weight: 600;
+  background: #f9fafb;
+  margin-bottom: 2px;
+}
+
+.cat-list-item.minor-item {
+  padding-left: 36px;
+}
+
+.cat-item-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.cat-item-name {
+  flex: 1;
+  font-size: 14px;
+}
+
+.cat-item-badge {
+  font-size: 11px;
+  color: var(--text-light);
+  background: #f0f2f5;
+  padding: 2px 8px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.cat-item-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.cat-btn-edit, .cat-btn-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 14px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+.cat-btn-edit:hover { background: #e8ecf1; }
+.cat-btn-delete:hover { background: #fde8e8; }
+
+.cat-edit-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+}
+.cat-edit-row input {
+  padding: 6px 10px;
+  border: 1.5px solid var(--primary);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+}
+.cat-edit-row input.icon-input-edit {
+  width: 44px;
+  text-align: center;
+}
+.cat-edit-row .btn-cat-save {
+  background: var(--success);
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.cat-edit-row .btn-cat-cancel {
+  background: #f0f2f5;
+  color: var(--text-secondary);
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
 }
 
 /* ====== 右键菜单 ====== */
