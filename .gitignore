@@ -1,0 +1,15 @@
+# 依赖包（npm install 即可恢复）
+node_modules/
+
+# 打包输出（npm run build 即可生成）
+release/
+
+# 数据库文件（个人隐私数据）
+data/
+
+# Claude 内部文件
+.claude/
+
+# 系统文件
+.DS_Store
+Thumbs.db
