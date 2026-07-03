@@ -1,1 +1,1 @@
-单纯测试agent hook 3
+单纯测试agent hook 4 — 全局hook
