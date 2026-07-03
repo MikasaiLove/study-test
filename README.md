@@ -154,20 +154,24 @@ npm test
 
 本项目集成了 Claude Code 的 Skills 和 Subagents，用于自动化开发流程。
 
+> ⚠️ **重要**：以下 Skills 和 Subagents **仅适用于 Claude Code**（Anthropic 官方 CLI），不支持 GitHub Copilot / Cursor / Cline 等其他 AI 工具。使用者需安装 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 并打开本项目，方可使用这些功能。普通用户下载 exe 直接使用即可，无需任何 AI 工具。
+
 ### Skills（技能 — `/` 指令调用）
 
 | 指令 | 位置 | 功能 |
 |------|------|------|
-| `/git-save` | 全局 | 一键 `git add` → `commit` → `push`，自动生成中文提交信息 |
+| `/git-save` | 全局（需自行配置） | 一键 `git add` → `commit` → `push` |
 | `/unit-test` | 项目 | 评估项目 → 安装框架 → 找测试目标 → 写测试 → 执行 → 报告 |
 | `/comments-check` | 项目 | 检查注释完整性（≥30%）、准确性、小白可读性 |
 | `/security-audit` | 项目 | 查敏感信息泄露、SQL 注入、Electron 安全配置、危险代码等 |
+
+> `/git-save` 是全局技能，存储在 `~/.claude/skills/`，不会被克隆到本地。其他三个技能已在 `项目/.claude/skills/` 中，克隆仓库后即可使用。
 
 ### Subagents（子代理 — 后台独立运行）
 
 | Agent | 装载技能 | 功能 |
 |-------|---------|------|
-| `tester` | unit-test | 独立运行单元测试，写通行证文件 |
+| `tester` | unit-test | 独立运行单元测试 |
 | `quality-engineer` | security-audit + comments-check + 代码规范 | 安全 + 注释 + 规范 三合一审查 |
 | `gitcommit-agent` | tester + quality-engineer + git-save | **质量门提交**：并行跑 tester 和 quality-engineer → 双 PASS 才允许 commit + push |
 
