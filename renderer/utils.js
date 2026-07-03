@@ -1,5 +1,6 @@
 // utils.js — 纯工具函数（不依赖 DOM 和 IPC）
 // 这些函数从 app.js 中提取出来，方便单元测试
+// 测试闸机用 — 稍后删除
 
 // 获取今天的日期字符串 YYYY-MM-DD
 function todayStr() {
