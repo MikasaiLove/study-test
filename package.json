@@ -6,6 +6,7 @@
   "scripts": {
     "start": "electron .",
     "start:fix": "node start-launcher.js",
+    "test": "vitest run",
     "build": "electron-builder"
   },
   "author": "",
@@ -16,7 +17,9 @@
   },
   "devDependencies": {
     "electron": "^28.0.0",
-    "electron-builder": "^26.15.3"
+    "electron-builder": "^26.15.3",
+    "jsdom": "^29.1.1",
+    "vitest": "^4.1.9"
   },
   "build": {
     "appId": "com.personal-accounting.app",
@@ -25,7 +28,9 @@
       "output": "release"
     },
     "win": {
-      "target": ["nsis"]
+      "target": [
+        "nsis"
+      ]
     },
     "nsis": {
       "oneClick": false,

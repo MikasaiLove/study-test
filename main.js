@@ -20,17 +20,20 @@ const dbPath = app.isPackaged
 let db = null;
 
 // 保存数据库到磁盘
+// 将内存中的数据库导出为二进制数据，写入 dbPath 文件
+// 每次增删改数据后都要调用一次，不然数据不会持久化
 function saveDb() {
   const data = db.export();                    // 导出数据库为二进制
-  const buffer = Buffer.from(data);
+  const buffer = Buffer.from(data);            // 转为 Node.js 可写的 Buffer 格式
   const dir = path.dirname(dbPath);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(dbPath, buffer);            // 写入磁盘
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true }); // 目录不存在则创建
+  fs.writeFileSync(dbPath, buffer);            // 写入磁盘文件
 }
 
-// 初始化数据库
+// 初始化数据库：建表、迁移旧数据、写入预设分类
+// 参数 SQL 是 sql.js 加载后返回的 SQL 模块对象（里面包含 Database 类），通过 initSqlJs() 获得
 async function initDatabase(SQL) {
-  // 如果已有数据库文件，从磁盘加载
+  // 如果磁盘上已有数据库文件，从磁盘加载
   if (fs.existsSync(dbPath)) {
     const fileBuffer = fs.readFileSync(dbPath);
     db = new SQL.Database(fileBuffer);
@@ -167,9 +170,10 @@ function queryAll(sql, params = []) {
   return rows;
 }
 
+// 执行写操作（插入/更新/删除），执行后自动保存数据库
 function queryRun(sql, params = []) {
   db.run(sql, params);
-  saveDb(); // 写操作后保存数据库
+  saveDb(); // 写操作后立即保存到磁盘，防止数据丢失
 }
 
 // ============ IPC 通信处理 ============
@@ -307,8 +311,9 @@ function createWindow() {
     resizable: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
+      contextIsolation: true,   // 隔离网页和主进程的 JS 上下文，防止网页直接访问 Node.js
+      nodeIntegration: false,   // 禁止网页里使用 require()
+      sandbox: true,            // 操作系统级沙箱，额外一层安全防护
     },
   });
 

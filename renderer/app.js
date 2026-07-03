@@ -44,11 +44,13 @@ function processCategories(cats) {
 }
 
 // ============ 日期工具 ============
+// 获取今天的日期字符串，格式 YYYY-MM-DD（如 2026-07-03）
 function todayStr() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
+// 获取当前年月字符串，格式 YYYY-MM（用于数据库查询和页面标题显示）
 function currentYearMonth() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
@@ -155,10 +157,11 @@ function formatDate(dateStr) {
   return `${parseInt(parts[1])}月${parseInt(parts[2])}日 ${weekDay}`;
 }
 
+// 把日期字符串转成中文星期几（如 2026-07-06 → "周一"）
 function getWeekDay(dateStr) {
   const days = ['周日','周一','周二','周三','周四','周五','周六'];
   const d = new Date(dateStr);
-  return days[d.getDay()];
+  return days[d.getDay()]; // Date.getDay() 返回 0-6（周日=0）
 }
 
 // ============ 渲染分类筛选标签 ============
@@ -576,6 +579,7 @@ async function openStats() {
   });
 }
 
+// 关闭月度统计弹窗
 function closeStats() {
   document.getElementById('statsOverlay').style.display = 'none';
 }
@@ -688,15 +692,16 @@ function renderPieChart(stats, yearMonth) {
 }
 
 // ============ 贪吃蛇游戏 ============
-const SNAKE_BOX = 20;        // 每个格子的大小（像素）
-const SNAKE_ROWS = 20;       // 画布行数（400 / 20）
-const SNAKE_COLS = 20;       // 画布列数（400 / 20）
-const SNAKE_SPEED = 120;     // 移动间隔（毫秒），越小越快
+// 以下常量定义了游戏的画面和规则
+const SNAKE_BOX = 20;        // 每个蛇身格子的像素大小（画布 400px ÷ 20 格 = 20px/格）
+const SNAKE_ROWS = 20;       // 画布行数（400 ÷ 20），整个画面是一个 20×20 的网格
+const SNAKE_COLS = 20;       // 画布列数（400 ÷ 20）
+const SNAKE_SPEED = 120;     // 蛇的移动速度：每隔 120 毫秒移动一格（数字越小跑得越快）
 
-let snakeState = null;       // 游戏状态
-let snakeTimer = null;       // 定时器
-let snakeCanvas = null;      // 画布元素（缓存，避免重复查询 DOM）
-let snakeCtx = null;         // 画布上下文（缓存）
+let snakeState = null;       // 游戏状态对象（包含蛇身坐标、方向、食物、分数、是否结束）
+let snakeTimer = null;       // 定时器 ID（控制蛇自动移动的计时器，游戏结束/关闭时清除）
+let snakeCanvas = null;      // 画布 DOM 元素（首次打开游戏时缓存，不用每次重查）
+let snakeCtx = null;         // 画布 2D 绘图上下文（缓存，用于绘制蛇、食物、游戏结束画面）
 
 // 打开贪吃蛇游戏弹窗（每次都重新开始）
 function openSnakeGame() {
@@ -737,7 +742,8 @@ function initSnakeGame() {
   drawSnake();
 }
 
-// 绘制游戏画面
+// 绘制一整帧游戏画面（依次画：背景 → 食物 → 蛇身 → 游戏结束蒙版）
+// 每一帧都会被完整重绘，所以先清空画布再画新的
 function drawSnake() {
   const canvas = snakeCanvas;
   const ctx = snakeCtx;
@@ -844,14 +850,15 @@ function updateSnake() {
   drawSnake();
 }
 
-// 随机生成食物（避开蛇身）
+// 在蛇身之外的空白位置随机生成一个新食物
+// 用 do-while 循环确保食物不会出现在蛇身上（一直随机直到找到空位）
 function spawnFood() {
   const s = snakeState;
   let fx, fy;
   do {
-    fx = Math.floor(Math.random() * SNAKE_COLS);
-    fy = Math.floor(Math.random() * SNAKE_ROWS);
-  } while (s.body.some(seg => seg.x === fx && seg.y === fy));
+    fx = Math.floor(Math.random() * SNAKE_COLS); // 随机列位置
+    fy = Math.floor(Math.random() * SNAKE_ROWS); // 随机行位置
+  } while (s.body.some(seg => seg.x === fx && seg.y === fy)); // 重试直到不在蛇身上
   s.food = { x: fx, y: fy };
 }
 
