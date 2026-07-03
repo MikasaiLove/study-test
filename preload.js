@@ -20,4 +20,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // ====== 统计相关 ======
   getMonthlyStats: (yearMonth) => ipcRenderer.invoke('getMonthlyStats', yearMonth),
+
+  // ====== 导入导出 ======
+  exportExpenses: () => ipcRenderer.invoke('exportExpenses'),
+  importExpenses: () => ipcRenderer.invoke('importExpenses'),
 });

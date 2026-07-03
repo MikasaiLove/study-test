@@ -702,17 +702,30 @@ let snakeState = null;       // 游戏状态对象（包含蛇身坐标、方向
 let snakeTimer = null;       // 定时器 ID（控制蛇自动移动的计时器，游戏结束/关闭时清除）
 let snakeCanvas = null;      // 画布 DOM 元素（首次打开游戏时缓存，不用每次重查）
 let snakeCtx = null;         // 画布 2D 绘图上下文（缓存，用于绘制蛇、食物、游戏结束画面）
+let snakePlaying = false;    // 游戏是否正在进行中（false=等待开始/已结束）
 
-// 打开贪吃蛇游戏弹窗（每次都重新开始）
+// 打开贪吃蛇游戏弹窗（显示初始画面，不自动开始）
 function openSnakeGame() {
   document.getElementById('snakeOverlay').style.display = 'flex';
   initSnakeGame();
+  // 不自动开始，等用户按空格或点开始按钮
+}
+
+// 开始贪吃蛇游戏
+function startSnakeGame() {
+  if (!snakeState || snakeState.gameOver) {
+    initSnakeGame();
+  }
+  snakePlaying = true;
   startSnakeLoop();
+  document.getElementById('btnSnakeStart').textContent = '🔄 重新开始';
+  drawSnake();
 }
 
 // 关闭贪吃蛇游戏弹窗
 function closeSnakeGame() {
   document.getElementById('snakeOverlay').style.display = 'none';
+  snakePlaying = false;
   // 关闭弹窗时暂停游戏（删掉定时器）
   stopSnakeLoop();
 }
@@ -725,6 +738,7 @@ function initSnakeGame() {
     snakeCtx = snakeCanvas.getContext('2d');
   }
 
+  snakePlaying = false;       // 等待用户开始
   // 蛇的初始位置：画布中间偏左，长度为 3 节
   snakeState = {
     body: [
@@ -739,6 +753,7 @@ function initSnakeGame() {
     gameOver: false,
   };
   document.getElementById('snakeScore').textContent = '0';
+  document.getElementById('btnSnakeStart').textContent = '▶ 开始游戏';
   drawSnake();
 }
 
@@ -793,11 +808,27 @@ function drawSnake() {
     ctx.fillText('点击"重新开始"再来一局', canvas.width / 2, canvas.height / 2 + 25);
     ctx.textAlign = 'start';
   }
+
+  // 等待开始提示（游戏初始化后、未开始前）
+  if (!snakePlaying && !s.gameOver) {
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#5dde5d';
+    ctx.font = 'bold 22px "Microsoft YaHei"';
+    ctx.textAlign = 'center';
+    ctx.fillText('🐍 贪吃蛇', canvas.width / 2, canvas.height / 2 - 25);
+    ctx.fillStyle = '#fff';
+    ctx.font = '15px "Microsoft YaHei"';
+    ctx.fillText('按 空格键 或点击下方按钮开始', canvas.width / 2, canvas.height / 2 + 15);
+    ctx.fillText('方向键 ↑↓←→ 或 WASD 控制移动', canvas.width / 2, canvas.height / 2 + 42);
+    ctx.textAlign = 'start';
+  }
 }
 
 // 更新游戏状态（移动蛇）
 function updateSnake() {
   const s = snakeState;
+  if (!snakePlaying) return;  // 还没开始，不更新
   if (s.gameOver) return;
 
   // 应用方向
@@ -876,31 +907,42 @@ function stopSnakeLoop() {
   }
 }
 
-// 键盘控制
+// 键盘控制：方向键 + WASD + 空格开始
 function handleSnakeKey(e) {
-  // 只在游戏弹窗打开且游戏未结束时响应
+  // 只在游戏弹窗打开时响应
   if (document.getElementById('snakeOverlay').style.display !== 'flex') return;
-  if (!snakeState || snakeState.gameOver) return;
+  if (!snakeState) return;
 
   const s = snakeState;
-  // 防止反向（比如向右走时不能立刻向左，会撞到自己）
-  switch (e.key) {
-    case 'ArrowUp':
-      e.preventDefault();
-      if (s.direction !== 'down') s.nextDirection = 'up';
-      break;
-    case 'ArrowDown':
-      e.preventDefault();
-      if (s.direction !== 'up') s.nextDirection = 'down';
-      break;
-    case 'ArrowLeft':
-      e.preventDefault();
-      if (s.direction !== 'right') s.nextDirection = 'left';
-      break;
-    case 'ArrowRight':
-      e.preventDefault();
-      if (s.direction !== 'left') s.nextDirection = 'right';
-      break;
+
+  // 空格键：开始游戏 / 重新开始
+  if (e.key === ' ') {
+    e.preventDefault();
+    if (!snakePlaying || s.gameOver) {
+      startSnakeGame();
+    }
+    return;
+  }
+
+  // 游戏结束时忽略方向键
+  if (s.gameOver || !snakePlaying) return;
+
+  // 方向键 + WASD（防止 180° 反向）
+  const dirMap = {
+    'ArrowUp':    { dir: 'up',    opposite: 'down' },
+    'ArrowDown':  { dir: 'down',  opposite: 'up' },
+    'ArrowLeft':  { dir: 'left',  opposite: 'right' },
+    'ArrowRight': { dir: 'right', opposite: 'left' },
+    'w': { dir: 'up',    opposite: 'down' },
+    's': { dir: 'down',  opposite: 'up' },
+    'a': { dir: 'left',  opposite: 'right' },
+    'd': { dir: 'right', opposite: 'left' },
+  };
+
+  const mapping = dirMap[e.key];
+  if (mapping && s.direction !== mapping.opposite) {
+    e.preventDefault();
+    s.nextDirection = mapping.dir;
   }
 }
 
@@ -933,6 +975,12 @@ function bindEvents() {
   });
   document.getElementById('catAddType').addEventListener('change', handleCatTypeChange);
   document.getElementById('btnCatAdd').addEventListener('click', handleAddOrUpdateCat);
+  // emoji 选择器：点击 emoji 填入图标框
+  document.getElementById('emojiPicker').addEventListener('click', (e) => {
+    if (e.target.classList.contains('emoji-option')) {
+      document.getElementById('catAddIcon').value = e.target.textContent;
+    }
+  });
 
   // 月度统计
   document.getElementById('btnStats').addEventListener('click', openStats);
@@ -948,11 +996,34 @@ function bindEvents() {
     if (e.target.id === 'snakeOverlay') closeSnakeGame();
   });
   document.getElementById('btnSnakeStart').addEventListener('click', () => {
-    initSnakeGame();
-    startSnakeLoop();
+    startSnakeGame();
   });
   // 键盘事件在 document 上监听（因为 canvas 不能获取焦点）
   document.addEventListener('keydown', handleSnakeKey);
+
+  // 导出 Excel
+  document.getElementById('btnExport').addEventListener('click', async () => {
+    const result = await window.electronAPI.exportExpenses();
+    if (result.success) {
+      alert(`✅ 导出成功！\n\n共 ${result.count} 条记录\n保存至：${result.path}`);
+    } else {
+      alert('导出失败：' + result.error);
+    }
+  });
+
+  // 导入 Excel
+  document.getElementById('btnImport').addEventListener('click', async () => {
+    if (!confirm('导入会新增记录，不会覆盖已有数据。\n\n文件格式要求：\n- 第一行为表头（日期、大类、小类、金额、备注）\n- 支持 .xlsx / .xls / .csv 格式\n\n确定要导入吗？')) return;
+
+    const result = await window.electronAPI.importExpenses();
+    if (result.success) {
+      alert(`✅ 导入成功！\n\n成功导入 ${result.count} 条记录（共 ${result.total} 行）`);
+      await loadExpenses();
+      await updateMonthlyTotal();
+    } else {
+      alert('导入失败：' + result.error);
+    }
+  });
 }
 
 // ============ 启动应用 ============

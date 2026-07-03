@@ -1,6 +1,6 @@
 # 💰 个人记账 APP
 
-一款基于 **Electron** 的 Windows 桌面记账应用，支持两级分类、月度统计，内置贪吃蛇小游戏。集成了 **Claude Code** 的 AI 辅助开发体系（Skills + Subagents + 质量门）。
+一款基于 **Electron** 的 Windows 桌面记账应用，支持两级分类、月度统计、Excel 导入导出，内置贪吃蛇小游戏。集成了 **Claude Code** 的 AI 辅助开发体系（Skills + Subagents + 质量门）。
 
 ---
 
@@ -11,15 +11,25 @@
 - 支出列表：按时间倒序，按日期分组
 - 分类筛选：按大类过滤支出记录
 - 分类管理：自定义大类/小类，增删改
+- **Emoji 选择器**：60+ emoji 一键选择分类图标
 - 编辑/删除：点击编辑，右键删除
 
 ### 📊 统计
-- 月度统计：饼图展示各大类支出占比
-- 图表库：Chart.js 甜甜圈图
+- 月度统计：甜甜圈图展示各大类支出占比
+
+### 📥📤 数据导入导出
+- **导出 Excel**：一键导出所有记录为 `.xlsx` 文件
+- **导入 Excel**：从 `.xlsx` / `.csv` 导入记录（自动识别中英文表头，只新增不覆盖）
 
 ### 🐍 贪吃蛇
 - 内置 Canvas 贪吃蛇小游戏
-- 方向键控制，得分系统
+- 方向键 + **WASD** 双模式控制
+- 打开后不自动开始，按**空格键**或点击按钮开始
+
+### 🎨 界面
+- 二次元风渐变背景 + 装饰光斑
+- 紫色系配色 + 毛玻璃效果
+- 按钮悬停动画
 
 ---
 
@@ -31,6 +41,7 @@
 | 前端 | HTML + CSS + Vanilla JS |
 | 数据库 | SQLite（sql.js） |
 | 图表 | Chart.js 4 |
+| Excel | SheetJS (xlsx) |
 | 测试 | Vitest + jsdom |
 | 打包 | electron-builder (NSIS .exe) |
 
@@ -38,14 +49,19 @@
 
 ## 快速开始
 
-### 运行
+### 下载使用（普通用户）
+
+去 [Releases](https://github.com/MikasaiLove/study-test/releases) 下载最新 `.exe` 安装包，双击安装即可。
+
+### 开发运行
 
 ```bash
-# 推荐方式（自动处理环境变量）
-node start-launcher.js
+git clone git@github.com:MikasaiLove/study-test.git
+cd study-test
+npm install
 
-# 或手动
-ELECTRON_RUN_AS_NODE= npx electron .
+# 启动
+node start-launcher.js
 ```
 
 ### 打包
@@ -67,19 +83,19 @@ npm test
 
 ```
 个人记账APP/
-├── main.js                  # Electron 主进程（窗口、数据库、IPC）
+├── main.js                  # Electron 主进程（窗口、数据库、IPC、导入导出）
 ├── preload.js               # 安全桥接（contextBridge）
 ├── start-launcher.js        # 启动脚本
 ├── renderer/
 │   ├── index.html           # 主界面
-│   ├── style.css            # 样式
-│   ├── app.js               # 前端主逻辑（记账 + 贪吃蛇）
+│   ├── style.css            # 样式（二次元风主题）
+│   ├── app.js               # 前端主逻辑（记账 + 贪吃蛇 + 导入导出）
 │   ├── utils.js             # 纯工具函数（日期、分类处理）
 │   └── chart.umd.min.js     # Chart.js 库
 ├── tests/
 │   └── utils.test.js        # 单元测试（21 条）
 ├── data/
-│   └── accounting.db        # SQLite 数据库
+│   └── accounting.db        # SQLite 数据库（自动生成）
 ├── .claude/
 │   ├── agents/              # Claude Code 子代理
 │   ├── skills/              # Claude Code 技能
@@ -123,6 +139,17 @@ npm test
 
 ---
 
+## 数据存储
+
+| 场景 | 路径 |
+|------|------|
+| 开发运行 | `项目目录/data/accounting.db` |
+| 安装后运行 | `C:\Users\<用户名>\AppData\Roaming\个人记账\accounting.db` |
+
+备份数据库文件即可迁移数据。
+
+---
+
 ## Claude Code AI 辅助体系
 
 本项目集成了 Claude Code 的 Skills 和 Subagents，用于自动化开发流程。
@@ -156,17 +183,6 @@ npm test
   双 PASS → git commit + push → 清理通行证
   任一 FAIL → 拒绝提交 + 显示原因
 ```
-
----
-
-## 数据存储
-
-| 场景 | 路径 |
-|------|------|
-| 开发运行 | `项目目录/data/accounting.db` |
-| 安装后运行 | `C:\Users\<用户名>\AppData\Roaming\个人记账\accounting.db` |
-
-备份数据库文件即可迁移数据。
 
 ---
 

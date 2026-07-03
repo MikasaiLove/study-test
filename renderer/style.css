@@ -1,22 +1,23 @@
 /* ========================================
    个人记账 APP — 样式文件
-   设计风格：简洁、现代、温暖
+   设计风格：简洁、现代、二次元风
    ======================================== */
 
 /* ----- CSS 变量（统一管理颜色）----- */
 :root {
-  --primary: #4a90d9;        /* 主色调：蓝色 */
-  --primary-dark: #3a7bc8;
+  --primary: #6c5ce7;        /* 主色调：紫色 */
+  --primary-dark: #5a4bd1;
+  --primary-light: #a29bfe;
   --danger: #e74c3c;         /* 危险操作（删除） */
   --success: #27ae60;        /* 成功/保存 */
-  --bg: #f0f2f5;             /* 页面背景 */
-  --card-bg: #ffffff;        /* 卡片背景 */
-  --text: #2c3e50;           /* 主要文字 */
-  --text-secondary: #7f8c8d; /* 次要文字 */
-  --text-light: #bdc3c7;     /* 更浅文字 */
-  --border: #e8ecf1;         /* 边框 */
-  --shadow: 0 2px 12px rgba(0,0,0,0.08); /* 阴影 */
-  --radius: 12px;            /* 圆角 */
+  --bg: #f8f4fc;             /* 页面背景：浅紫 */
+  --card-bg: rgba(255,255,255,0.92); /* 卡片背景：半透明白 */
+  --text: #2d2439;           /* 主要文字 */
+  --text-secondary: #7c7390; /* 次要文字 */
+  --text-light: #b8afc6;     /* 更浅文字 */
+  --border: #e8e4f0;         /* 边框 */
+  --shadow: 0 4px 20px rgba(108,92,231,0.10); /* 阴影 */
+  --radius: 14px;            /* 圆角 */
 }
 
 /* ----- 全局重置 ----- */
@@ -24,22 +25,55 @@
 
 body {
   font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
-  background: var(--bg);
   color: var(--text);
   height: 100vh;
   display: flex;
   flex-direction: column;
   user-select: none;
   overflow: hidden;
+  /* 二次元风渐变背景 */
+  background:
+    linear-gradient(135deg, #fce4ec 0%, #f3e5f5 15%, #e8eaf6 30%, #e3f2fd 50%, #e0f7fa 65%, #f1f8e9 85%, #fff8e1 100%);
+  position: relative;
 }
+
+/* 背景装饰元素 — 柔和的浮动光斑 */
+body::before {
+  content: '';
+  position: fixed;
+  top: -80px; right: -60px;
+  width: 280px; height: 280px;
+  background: radial-gradient(circle, rgba(255,182,193,0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  bottom: -40px; left: -50px;
+  width: 220px; height: 220px;
+  background: radial-gradient(circle, rgba(167,139,250,0.25) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 如果要换成自己的二次元壁纸，把上面的 background 改成：
+   background: url('your-image.jpg') center/cover no-repeat;
+   然后在 .header 和 .expense-item 上加 backdrop-filter: blur(2px); */
 
 /* ====== 顶部区域 ====== */
 .header {
-  background: linear-gradient(135deg, #4a90d9, #5ba0e8);
+  background: linear-gradient(135deg, #6c5ce7, #a29bfe, #6c5ce7);
   color: #fff;
-  padding: 24px 20px 20px;
+  padding: 28px 20px 24px;
   text-align: center;
   flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 4px 20px rgba(108,92,231,0.25);
 }
 
 .header-title {
@@ -79,44 +113,76 @@ body {
   background: var(--card-bg);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+  backdrop-filter: blur(10px);
 }
 
 .btn-add, .btn-stats, .btn-category, .btn-snake {
   flex: 1;
-  padding: 10px 0;
+  padding: 12px 0;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 14px;
   cursor: pointer;
   font-weight: 600;
   transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.btn-add:active, .btn-stats:active, .btn-category:active, .btn-snake:active {
+  transform: scale(0.96);
 }
 
 .btn-add {
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
   color: #fff;
 }
-.btn-add:hover { background: var(--primary-dark); }
+.btn-add:hover { box-shadow: 0 4px 16px rgba(108,92,231,0.35); transform: translateY(-1px); }
 
 .btn-stats {
-  background: #f0f4ff;
+  background: linear-gradient(135deg, #e8eaf6, #f3e5f5);
   color: var(--primary);
 }
-.btn-stats:hover { background: #e0eaff; }
+.btn-stats:hover { background: linear-gradient(135deg, #d1c4e9, #e1bee7); transform: translateY(-1px); }
 
 .btn-category {
-  background: #f0f4ff;
+  background: linear-gradient(135deg, #e8eaf6, #f3e5f5);
   color: var(--primary);
-  flex: 0.6;
+  flex: 0.45;
 }
-.btn-category:hover { background: #e0eaff; }
+.btn-category:hover { background: linear-gradient(135deg, #d1c4e9, #e1bee7); transform: translateY(-1px); }
 
 .btn-snake {
-  background: #e8f8e8;
-  color: #2d8a2d;
-  flex: 0.6;
+  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+  color: #2e7d32;
+  flex: 0.45;
 }
-.btn-snake:hover { background: #d0f0d0; }
+.btn-snake:hover { background: linear-gradient(135deg, #c8e6c9, #a5d6a7); transform: translateY(-1px); }
+
+/* 导入导出按钮栏（第二行，更紧凑） */
+.action-bar-sub {
+  padding: 6px 16px 14px;
+  gap: 8px;
+}
+
+.btn-export, .btn-import {
+  flex: 1;
+  padding: 8px 0;
+  border: 1.5px dashed var(--primary-light);
+  border-radius: 10px;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 600;
+  background: transparent;
+  color: var(--primary);
+  transition: all 0.2s;
+}
+
+.btn-export:hover, .btn-import:hover {
+  background: rgba(108,92,231,0.08);
+  border-style: solid;
+  transform: translateY(-1px);
+}
 
 /* ====== 分类筛选标签 ====== */
 .filter-bar {
@@ -656,7 +722,7 @@ body {
 
 /* ====== 贪吃蛇游戏 ====== */
 .snake-modal {
-  max-width: 460px;
+  max-width: 480px;
 }
 
 .snake-body {
@@ -697,5 +763,81 @@ body {
   cursor: pointer;
   margin-top: 10px;
   transition: background 0.2s;
+}
+.btn-snake-start:hover { background: #219a52; }
+
+/* ====== Emoji 选择面板 ====== */
+.emoji-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 10px;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.emoji-option {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.15s;
+  border: 2px solid transparent;
+}
+
+.emoji-option:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  transform: scale(1.25);
+}
+
+.icon-input {
+  width: 52px !important;
+  text-align: center;
+  font-size: 18px !important;
+  cursor: pointer;
+}
+
+/* ====== 美化弹窗 ====== */
+.modal {
+  border-radius: 18px 18px 0 0 !important;
+}
+
+.modal-header {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: #fff;
+  border-radius: 18px 18px 0 0;
+  border-bottom: none !important;
+}
+
+.modal-close {
+  color: #fff !important;
+  opacity: 0.8;
+}
+.modal-close:hover { opacity: 1; }
+
+/* 记一笔弹窗美化 */
+.expense-item {
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+}
+.expense-item:hover {
+  border-left-color: var(--primary-light);
+  transform: translateX(2px);
+}
+
+/* 统计页面美化 */
+.chart-container {
+  width: 240px !important;
+  height: 240px !important;
+  margin: 0 auto 24px !important;
 }
 .btn-snake-start:hover { background: #219a52; }

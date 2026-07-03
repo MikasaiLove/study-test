@@ -25,6 +25,10 @@
     <button class="btn-category" id="btnCategory">⚙️ 分类</button>
     <button class="btn-snake" id="btnSnake">🐍 贪吃蛇</button>
   </div>
+  <div class="action-bar action-bar-sub">
+    <button class="btn-export" id="btnExport">📥 导出 Excel</button>
+    <button class="btn-import" id="btnImport">📤 导入 Excel</button>
+  </div>
 
   <!-- ====== 分类筛选标签 ====== -->
   <div class="filter-bar" id="filterBar">
@@ -132,8 +136,69 @@
               <!-- 动态填充大类选项 -->
             </select>
             <input type="text" id="catAddName" placeholder="分类名称" maxlength="10">
-            <input type="text" id="catAddIcon" placeholder="😀" maxlength="2" class="icon-input">
+            <input type="text" id="catAddIcon" placeholder="😀" maxlength="2" class="icon-input" onclick="this.select()">
             <button class="btn-cat-add" id="btnCatAdd">添加</button>
+          </div>
+          <!-- Emoji 快速选择面板 -->
+          <div class="emoji-picker" id="emojiPicker">
+            <span class="emoji-option" title="餐饮">🍜</span>
+            <span class="emoji-option" title="早餐">🥛</span>
+            <span class="emoji-option" title="午餐">🍱</span>
+            <span class="emoji-option" title="晚餐">🍽️</span>
+            <span class="emoji-option" title="零食">🍿</span>
+            <span class="emoji-option" title="饮品">🧋</span>
+            <span class="emoji-option" title="聚餐">🥘</span>
+            <span class="emoji-option" title="食材">🥬</span>
+            <span class="emoji-option" title="交通">🚗</span>
+            <span class="emoji-option" title="公交">🚌</span>
+            <span class="emoji-option" title="打车">🚕</span>
+            <span class="emoji-option" title="加油">⛽</span>
+            <span class="emoji-option" title="停车">🅿️</span>
+            <span class="emoji-option" title="火车">🚄</span>
+            <span class="emoji-option" title="购物">🛒</span>
+            <span class="emoji-option" title="日用品">🧴</span>
+            <span class="emoji-option" title="衣物">👗</span>
+            <span class="emoji-option" title="数码">💻</span>
+            <span class="emoji-option" title="家居">🛋️</span>
+            <span class="emoji-option" title="美妆">💄</span>
+            <span class="emoji-option" title="住房">🏠</span>
+            <span class="emoji-option" title="水费">💧</span>
+            <span class="emoji-option" title="电费">⚡</span>
+            <span class="emoji-option" title="燃气">🔥</span>
+            <span class="emoji-option" title="物业">🏢</span>
+            <span class="emoji-option" title="维修">🔧</span>
+            <span class="emoji-option" title="娱乐">🎮</span>
+            <span class="emoji-option" title="电影">🎬</span>
+            <span class="emoji-option" title="游戏">🎯</span>
+            <span class="emoji-option" title="旅游">✈️</span>
+            <span class="emoji-option" title="健身">🏋️</span>
+            <span class="emoji-option" title="KTV">🎤</span>
+            <span class="emoji-option" title="会员">⭐</span>
+            <span class="emoji-option" title="医疗">💊</span>
+            <span class="emoji-option" title="门诊">🏥</span>
+            <span class="emoji-option" title="买药">💉</span>
+            <span class="emoji-option" title="体检">🩺</span>
+            <span class="emoji-option" title="住院">🛌</span>
+            <span class="emoji-option" title="教育">📚</span>
+            <span class="emoji-option" title="课程">🎓</span>
+            <span class="emoji-option" title="书籍">📖</span>
+            <span class="emoji-option" title="文具">✏️</span>
+            <span class="emoji-option" title="考试">📝</span>
+            <span class="emoji-option" title="人情">🎁</span>
+            <span class="emoji-option" title="送礼">🎀</span>
+            <span class="emoji-option" title="红包">🧧</span>
+            <span class="emoji-option" title="请客">🍻</span>
+            <span class="emoji-option" title="聚会">🥂</span>
+            <span class="emoji-option" title="其他">📦</span>
+            <span class="emoji-option" title="快递">📬</span>
+            <span class="emoji-option" title="服务费">💳</span>
+            <span class="emoji-option" title="宠物">🐱</span>
+            <span class="emoji-option" title="植物">🌿</span>
+            <span class="emoji-option" title="咖啡">☕</span>
+            <span class="emoji-option" title="蛋糕">🎂</span>
+            <span class="emoji-option" title="音乐">🎵</span>
+            <span class="emoji-option" title="相机">📷</span>
+            <span class="emoji-option" title="手机">📱</span>
           </div>
         </div>
         <!-- 分类列表 -->

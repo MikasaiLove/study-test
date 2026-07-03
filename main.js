@@ -1,9 +1,10 @@
 // main.js — Electron 主进程
 // 职责：创建APP窗口、管理数据库、处理来自前端的请求
 
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const XLSX = require('xlsx');  // Excel 读写库
 
 // ============ 数据库初始化（使用 sql.js，纯 JS，无需编译工具）============
 
@@ -302,12 +303,132 @@ ipcMain.handle('getMonthlyStats', (_event, yearMonth) => {
   );
 });
 
+// ============ Excel 导入导出 ============
+
+// 导出所有支出记录为 Excel 文件
+ipcMain.handle('exportExpenses', async () => {
+  // 从数据库读取所有支出记录
+  const expenses = queryAll('SELECT * FROM expenses ORDER BY date DESC, id DESC');
+  if (expenses.length === 0) {
+    return { success: false, error: '没有支出记录可导出' };
+  }
+
+  // 弹出保存文件对话框
+  const result = await dialog.showSaveDialog({
+    title: '导出支出记录',
+    defaultPath: `记账数据_${new Date().toISOString().slice(0, 10)}.xlsx`,
+    filters: [
+      { name: 'Excel 文件', extensions: ['xlsx'] },
+      { name: 'CSV 文件', extensions: ['csv'] },
+    ],
+  });
+
+  if (result.canceled) return { success: false, error: '已取消' };
+
+  try {
+    // 准备好写的数据（把数据库字段转成中文表头）
+    const rows = expenses.map(e => ({
+      '日期': e.date,
+      '大类': e.category_major,
+      '小类': e.category_minor,
+      '金额(元)': e.amount,
+      '备注': e.note || '',
+      '记录时间': e.created_at || '',
+    }));
+
+    const workbook = XLSX.utils.book_new();
+    const sheet = XLSX.utils.json_to_sheet(rows);
+    // 设置列宽
+    sheet['!cols'] = [
+      { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 20 }, { wch: 20 },
+    ];
+    XLSX.utils.book_append_sheet(workbook, sheet, '支出记录');
+
+    // 写入文件
+    const filePath = result.filePath;
+    if (filePath.endsWith('.csv')) {
+      XLSX.writeFile(workbook, filePath, { bookType: 'csv' });
+    } else {
+      XLSX.writeFile(workbook, filePath);
+    }
+
+    return { success: true, path: filePath, count: expenses.length };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+// 从 Excel 文件导入支出记录
+ipcMain.handle('importExpenses', async () => {
+  // 弹出打开文件对话框
+  const result = await dialog.showOpenDialog({
+    title: '导入支出记录',
+    filters: [
+      { name: 'Excel/CSV 文件', extensions: ['xlsx', 'xls', 'csv'] },
+    ],
+    properties: ['openFile'],
+  });
+
+  if (result.canceled || result.filePaths.length === 0) {
+    return { success: false, error: '已取消' };
+  }
+
+  const filePath = result.filePaths[0];
+
+  try {
+    // 读取 Excel 文件
+    const workbook = XLSX.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];  // 取第一个工作表
+    const sheet = workbook.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(sheet);
+
+    if (rows.length === 0) {
+      return { success: false, error: '文件中没有数据' };
+    }
+
+    // 支持中英文表头
+    let imported = 0;
+    const stmt = db.prepare(
+      'INSERT INTO expenses (amount, category_major, category_minor, date, note) VALUES (?, ?, ?, ?, ?)'
+    );
+
+    for (const row of rows) {
+      // 兼容中英文列名
+      const date = row['日期'] || row['date'] || '';
+      const major = row['大类'] || row['category_major'] || '';
+      const minor = row['小类'] || row['category_minor'] || '';
+      const amount = parseFloat(row['金额(元)'] || row['amount'] || 0);
+      const note = row['备注'] || row['note'] || '';
+
+      // 数据校验：日期和金额必须有
+      if (!date || isNaN(amount) || amount <= 0 || !major || !minor) {
+        continue;  // 跳过无效行
+      }
+
+      stmt.run([amount, major, minor, date, note]);
+      imported++;
+    }
+    stmt.free();
+
+    if (imported === 0) {
+      return { success: false, error: '没有有效的记录可导入，请检查文件格式' };
+    }
+
+    saveDb();
+    return { success: true, count: imported, total: rows.length };
+  } catch (err) {
+    return { success: false, error: '文件读取失败：' + err.message };
+  }
+});
+
 // ============ 创建主窗口 ============
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 420,
-    height: 680,
+    width: 520,
+    height: 820,
+    minWidth: 400,
+    minHeight: 600,
     resizable: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
